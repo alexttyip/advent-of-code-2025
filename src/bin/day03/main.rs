@@ -1,5 +1,6 @@
 #![feature(test)]
 
+use itertools::Itertools;
 use num::{Integer, ToPrimitive};
 use std::iter::once;
 use std::time::Instant;
@@ -28,6 +29,34 @@ fn solve(batteries: u32) -> u64 {
                         .max()
                         .unwrap_or(acc)
                 })
+        })
+        .sum()
+}
+
+// Saw this on reddit, thought it was cool
+fn bubble_solve(batteries: usize) -> u64 {
+    include_str!("input.txt")
+        .lines()
+        .flat_map(|line| -> Option<[u64; 100]> {
+            line.chars()
+                .flat_map(|c| c.to_digit(10))
+                .flat_map(|d| d.to_u64())
+                .collect_array::<100>()
+        })
+        .map(|mut line| {
+            for left_p in (0..(100 - batteries)).rev() {
+                for right_p in 100 - batteries..100 {
+                    if line[left_p] >= line[right_p] {
+                        line.swap(left_p, right_p);
+                    } else {
+                        break;
+                    }
+                }
+            }
+
+            line[(100 - batteries)..]
+                .iter()
+                .fold(0, |acc, curr| acc * 10 + curr)
         })
         .sum()
 }
@@ -73,5 +102,15 @@ mod tests {
     #[bench]
     fn bench_part2(b: &mut Bencher) {
         b.iter(part2);
+    }
+
+    #[bench]
+    fn bench_part1_bubble(b: &mut Bencher) {
+        b.iter(|| bubble_solve(2));
+    }
+
+    #[bench]
+    fn bench_part2_bubble(b: &mut Bencher) {
+        b.iter(|| bubble_solve(12));
     }
 }
